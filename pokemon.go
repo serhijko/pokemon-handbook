@@ -1,9 +1,16 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type pokemon struct {
@@ -20,7 +27,58 @@ var pokemons = []pokemon{
 	{ID: "54", Name: "psyduck", IsLegendary: false, Color: "yellow"},
 }
 
+func init() {
+	fmt.Println("This is init")
+}
+
 func main() {
+	fmt.Println("This is main")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("Client value %v\n", client)
+
+	collection := client.Database("pokemon-book").Collection("pokemon")
+	fmt.Printf("Collection value %v\n", collection)
+
+	for _, pokemon := range pokemons {
+		res, err := collection.InsertOne(context.Background(), pokemon)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		id := res.InsertedID
+		fmt.Printf("id value %v\n", id)
+	}
+
+	cur, err := collection.Find(context.Background(), bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cur.Close(context.Background())
+	for cur.Next(context.Background()) {
+		// To decode into a struct, use cursor.Decode()
+		result := pokemon{}
+		err := cur.Decode(&result)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Pokemon entry: %v\n", result)
+
+		// To get the raw bson bytes use cursor.Current
+		raw := cur.Current
+		fmt.Printf("Raw result entry: %v\n", raw)
+	}
+	if err := cur.Err(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	router := gin.Default()
 	router.POST("/pokemons", postPokemons)
 	router.GET("/pokemons", getPokemons)
@@ -43,7 +101,7 @@ func postPokemons(c *gin.Context) {
 }
 
 func getPokemons(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, pokemons)
+	c.JSON(http.StatusOK, pokemons)
 }
 
 func getPokemonByID(c *gin.Context) {
@@ -51,7 +109,7 @@ func getPokemonByID(c *gin.Context) {
 
 	for _, a := range pokemons {
 		if a.ID == id {
-			c.IndentedJSON(http.StatusOK, a)
+			c.XML(http.StatusOK, a)
 			return
 		}
 	}
