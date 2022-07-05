@@ -101,7 +101,7 @@ func postPokemons(c *gin.Context) {
 }
 
 func getPokemons(c *gin.Context) {
-	c.JSON(http.StatusOK, pokemons)
+	c.IndentedJSON(http.StatusOK, pokemons)
 }
 
 func getPokemonByID(c *gin.Context) {
@@ -109,7 +109,7 @@ func getPokemonByID(c *gin.Context) {
 
 	for _, a := range pokemons {
 		if a.ID == id {
-			c.XML(http.StatusOK, a)
+			c.IndentedJSON(http.StatusOK, a)
 			return
 		}
 	}
