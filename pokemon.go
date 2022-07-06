@@ -232,12 +232,15 @@ func deletePokemonByID(c *gin.Context) {
 	collection := client.Database("pokemon-book").Collection("pokemon")
 	fmt.Printf("Collection value %v\n", collection)
 
-	_, err = collection.DeleteOne(context.Background(), bson.D{{"id", id}})
+	res, err := collection.DeleteOne(context.Background(), bson.D{{"id", id}})
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "pokemon not found"})
-		// log.Fatal(err)
+		log.Fatal(err)
 		return
 	}
 	// pokemons = append(pokemons[:s], pokemons[s+1:]...)
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "pokemon was deleted"})
+	if res.DeletedCount == 0 {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "pokemon not found"})
+	} else {
+		c.IndentedJSON(http.StatusOK, gin.H{"message": "pokemon was deleted"})
+	}
 }
