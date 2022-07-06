@@ -24,10 +24,10 @@ func init() {
 	fmt.Println("This is init")
 
 	var pokemons = []pokemon{
-		{ID: "1", Name: "bulbasaur", IsLegendary: false, Color: "green"},
-		{ID: "4", Name: "charmander", IsLegendary: false, Color: "red"},
-		{ID: "25", Name: "pikachu", IsLegendary: false, Color: "yellow"},
-		{ID: "54", Name: "psyduck", IsLegendary: false, Color: "yellow"},
+		// {ID: "1", Name: "bulbasaur", IsLegendary: false, Color: "green"},
+		// {ID: "4", Name: "charmander", IsLegendary: false, Color: "red"},
+		// {ID: "25", Name: "pikachu", IsLegendary: false, Color: "yellow"},
+		// {ID: "54", Name: "psyduck", IsLegendary: false, Color: "yellow"},
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -155,7 +155,7 @@ func getPokemonByID(c *gin.Context) {
 	fmt.Printf("Collection value %v\n", collection)
 
 	result := pokemon{}
-	err = collection.FindOne(context.Background(), bson.D{{"id", id}}).Decode(&result)
+	err = collection.FindOne(context.Background(), bson.D{{Key: "id", Value: id}}).Decode(&result)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "pokemon not found"})
 		// log.Fatal(err)
@@ -184,13 +184,9 @@ func updatePokemonByID(c *gin.Context) {
 	collection := client.Database("pokemon-book").Collection("pokemon")
 	fmt.Printf("Collection value %v\n", collection)
 
-	opts := options.FindOneAndUpdate().SetUpsert(true)
-	filter := bson.D{{"id", newPokemon.ID}}
-	update := bson.D{{"$set", bson.D{
-		{"name", newPokemon.Name},
-		{"islegendary", newPokemon.IsLegendary},
-		{"color", newPokemon.Color},
-	}}}
+	opts := options.FindOneAndUpdate().SetUpsert(false)
+	filter := bson.D{{Key: "id", Value: newPokemon.ID}}
+	update := bson.D{{Key: "$set", Value: newPokemon}}
 	var updatedPokemon bson.M
 	err = collection.FindOneAndUpdate(
 		context.Background(),
@@ -232,7 +228,7 @@ func deletePokemonByID(c *gin.Context) {
 	collection := client.Database("pokemon-book").Collection("pokemon")
 	fmt.Printf("Collection value %v\n", collection)
 
-	res, err := collection.DeleteOne(context.Background(), bson.D{{"id", id}})
+	res, err := collection.DeleteOne(context.Background(), bson.D{{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 		return
