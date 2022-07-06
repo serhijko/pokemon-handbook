@@ -30,17 +30,12 @@ func init() {
 		// {ID: "54", Name: "psyduck", IsLegendary: false, Color: "yellow"},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	collection, cancel, err := connectToMongoDB()
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Client value %v\n", client)
-
-	collection := client.Database("pokemon-book").Collection("pokemon")
-	fmt.Printf("Collection value %v\n", collection)
 
 	for _, pokemon := range pokemons {
 		res, err := collection.InsertOne(context.Background(), pokemon)
@@ -66,6 +61,21 @@ func main() {
 	router.Run("localhost:8080")
 }
 
+func connectToMongoDB() (*mongo.Collection, context.CancelFunc, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
+	var collection *mongo.Collection
+	if err == nil {
+		fmt.Printf("Client value %v\n", client)
+
+		collection = client.Database("pokemon-book").Collection("pokemon")
+		fmt.Printf("Collection value %v\n", collection)
+	}
+
+	return collection, cancel, err
+}
+
 func postPokemons(c *gin.Context) {
 	var newPokemon pokemon
 
@@ -74,17 +84,12 @@ func postPokemons(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	collection, cancel, err := connectToMongoDB()
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Client value %v\n", client)
-
-	collection := client.Database("pokemon-book").Collection("pokemon")
-	fmt.Printf("Collection value %v\n", collection)
 
 	res, err := collection.InsertOne(context.Background(), newPokemon)
 	if err != nil {
@@ -101,17 +106,12 @@ func postPokemons(c *gin.Context) {
 func getPokemons(c *gin.Context) {
 	var pokemons = []pokemon{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	collection, cancel, err := connectToMongoDB()
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Client value %v\n", client)
-
-	collection := client.Database("pokemon-book").Collection("pokemon")
-	fmt.Printf("Collection value %v\n", collection)
 
 	cur, err := collection.Find(context.Background(), bson.D{})
 	if err != nil {
@@ -142,17 +142,12 @@ func getPokemons(c *gin.Context) {
 func getPokemonByID(c *gin.Context) {
 	id := c.Param("id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	collection, cancel, err := connectToMongoDB()
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Client value %v\n", client)
-
-	collection := client.Database("pokemon-book").Collection("pokemon")
-	fmt.Printf("Collection value %v\n", collection)
 
 	result := pokemon{}
 	err = collection.FindOne(context.Background(), bson.D{{Key: "id", Value: id}}).Decode(&result)
@@ -172,17 +167,12 @@ func updatePokemonByID(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	collection, cancel, err := connectToMongoDB()
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Client value %v\n", client)
-
-	collection := client.Database("pokemon-book").Collection("pokemon")
-	fmt.Printf("Collection value %v\n", collection)
 
 	opts := options.FindOneAndUpdate().SetUpsert(false)
 	filter := bson.D{{Key: "id", Value: newPokemon.ID}}
@@ -216,17 +206,12 @@ func updatePokemonByID(c *gin.Context) {
 func deletePokemonByID(c *gin.Context) {
 	id := c.Param("id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	collection, cancel, err := connectToMongoDB()
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Client value %v\n", client)
-
-	collection := client.Database("pokemon-book").Collection("pokemon")
-	fmt.Printf("Collection value %v\n", collection)
 
 	res, err := collection.DeleteOne(context.Background(), bson.D{{Key: "id", Value: id}})
 	if err != nil {
