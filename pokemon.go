@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,32 +22,51 @@ type pokemon struct {
 	Color       string `json:"color"`
 }
 
+type Config struct {
+	DatabaseURL    string
+	DatabaseName   string
+	CollectionName string
+	URL            string
+}
+
+var config Config
+
+func ReadConfig() Config {
+	var configFile = "properties.ini"
+	_, err := os.Stat(configFile)
+	if err != nil {
+		log.Fatal("Config file is missing: ", configFile)
+	}
+
+	if _, err := toml.DecodeFile(configFile, &config); err != nil {
+		log.Fatal(err)
+	}
+	return config
+}
+
+func connectToMongoDB() (*mongo.Collection, context.CancelFunc, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.DatabaseURL))
+	var collection *mongo.Collection
+	if err == nil {
+		fmt.Printf("Client value %v\n", client)
+
+		collection = client.Database(config.DatabaseName).Collection(config.CollectionName)
+		fmt.Printf("Collection value %v\n", collection)
+	}
+
+	return collection, cancel, err
+}
+
 func init() {
 	fmt.Println("This is init")
 
-	var pokemons = []pokemon{
-		// {ID: "1", Name: "bulbasaur", IsLegendary: false, Color: "green"},
-		// {ID: "4", Name: "charmander", IsLegendary: false, Color: "red"},
-		// {ID: "25", Name: "pikachu", IsLegendary: false, Color: "yellow"},
-		// {ID: "54", Name: "psyduck", IsLegendary: false, Color: "yellow"},
-	}
-
-	collection, cancel, err := connectToMongoDB()
-	defer cancel()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	for _, pokemon := range pokemons {
-		res, err := collection.InsertOne(context.Background(), pokemon)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		id := res.InsertedID
-		fmt.Printf("id value %v\n", id)
-	}
+	config := ReadConfig()
+	fmt.Printf(
+		"DatabaseURD: %s\nDatabaseName: %s\nCollectionName: %s\nURL: %s\n",
+		config.DatabaseURL, config.DatabaseName, config.CollectionName, config.URL,
+	)
 }
 
 func main() {
@@ -58,29 +79,14 @@ func main() {
 	router.PUT("/pokemons/:id", updatePokemonByID)
 	router.DELETE("/pokemons/:id", deletePokemonByID)
 
-	router.Run("localhost:8080")
-}
-
-func connectToMongoDB() (*mongo.Collection, context.CancelFunc, error) {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
-	var collection *mongo.Collection
-	if err == nil {
-		fmt.Printf("Client value %v\n", client)
-
-		collection = client.Database("pokemon-book").Collection("pokemon")
-		fmt.Printf("Collection value %v\n", collection)
-	}
-
-	return collection, cancel, err
+	router.Run(config.URL)
 }
 
 func postPokemons(c *gin.Context) {
 	var newPokemon pokemon
 
 	if err := c.BindJSON(&newPokemon); err != nil {
-		// c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "object can't be parsed into JSON"})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "object can't be parsed into JSON"})
 		return
 	}
 
