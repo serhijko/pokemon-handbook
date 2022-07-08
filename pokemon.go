@@ -62,11 +62,7 @@ func connectToMongoDB() (*mongo.Collection, context.CancelFunc, error) {
 func init() {
 	fmt.Println("This is init")
 
-	config := ReadConfig()
-	fmt.Printf(
-		"DatabaseURD: %s\nDatabaseName: %s\nCollectionName: %s\nURL: %s\n",
-		config.DatabaseURL, config.DatabaseName, config.CollectionName, config.URL,
-	)
+	config = ReadConfig()
 }
 
 func main() {
