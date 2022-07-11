@@ -176,7 +176,7 @@ func updatePokemonByID(c *gin.Context) {
 		return
 	}
 
-	opts := options.FindOneAndUpdate().SetUpsert(false)
+	opts := options.FindOneAndUpdate().SetUpsert(true)
 	filter := bson.D{{Key: "id", Value: newPokemon.ID}}
 	update := bson.D{{Key: "$set", Value: newPokemon}}
 	var updatedPokemon bson.M
@@ -189,14 +189,7 @@ func updatePokemonByID(c *gin.Context) {
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			// pokemons = append(pokemons, newPokemon)
-			res, err := collection.InsertOne(context.Background(), newPokemon)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			id := res.InsertedID
-			fmt.Printf("id value %v\n", id)
-
+			fmt.Printf("id value %v\n", newPokemon.ID)
 			c.IndentedJSON(http.StatusCreated, newPokemon)
 			return
 		}
