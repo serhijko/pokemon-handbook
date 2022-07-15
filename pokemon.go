@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -27,6 +29,8 @@ type Config struct {
 	DatabaseName   string
 	CollectionName string
 	URL            string
+	UserName       string
+	Password       string
 }
 
 var config Config
@@ -69,13 +73,74 @@ func main() {
 	fmt.Println("This is main")
 
 	router := gin.Default()
+
+	authorized := router.Group("/", gin.BasicAuth(gin.Accounts{
+		config.UserName: config.Password,
+	}))
+
+	authorized2 := router.Group("/", someBasicAuth())
+
 	router.POST("/pokemons", postPokemons)
-	router.GET("/pokemons", getPokemons)
-	router.GET("/pokemons/:id", getPokemonByID)
+	router.GET("/pokemons", someBasicAuth2, getPokemons)
+	authorized2.GET("/pokemons/:id", getPokemonByID)
 	router.PUT("/pokemons/:id", updatePokemonByID)
-	router.DELETE("/pokemons/:id", deletePokemonByID)
+	authorized.DELETE("/pokemons/:id", deletePokemonByID)
 
 	router.Run(config.URL)
+}
+
+func someBasicAuth2(c *gin.Context) {
+	auth := strings.SplitN(c.Request.Header.Get("Authorization"), " ", 2)
+
+	if len(auth) != 2 || auth[0] != "Basic" {
+		respondWithError(401, "Unauthorized", c)
+		return
+	}
+
+	payload, _ := base64.StdEncoding.DecodeString(auth[1])
+	pair := strings.SplitN(string(payload), ":", 2)
+
+	if len(pair) != 2 || !authenticateUser(pair[0], pair[1]) {
+		respondWithError(401, "Unauthorized", c)
+		return
+	}
+
+	c.Next()
+}
+
+func someBasicAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := strings.SplitN(c.Request.Header.Get("Authorization"), " ", 2)
+
+		if len(auth) != 2 || auth[0] != "Basic" {
+			respondWithError(401, "Unauthorized", c)
+			return
+		}
+
+		payload, _ := base64.StdEncoding.DecodeString(auth[1])
+		pair := strings.SplitN(string(payload), ":", 2)
+
+		if len(auth) != 2 || !authenticateUser(pair[0], pair[1]) {
+			respondWithError(401, "Unauthorized", c)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func authenticateUser(user, password string) bool {
+	if user == config.UserName && password == config.Password {
+		return true
+	}
+	return false
+}
+
+func respondWithError(code int, message string, c *gin.Context) {
+	resp := map[string]string{"error": message}
+
+	c.JSON(code, resp)
+	c.Abort()
 }
 
 func postPokemons(c *gin.Context) {
