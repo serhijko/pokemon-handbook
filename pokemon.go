@@ -31,6 +31,12 @@ type Config struct {
 	URL            string
 	UserName       string
 	Password       string
+	UserName1      string
+	Password1      string
+	UserName2      string
+	Password2      string
+	UserName3      string
+	Password3      string
 }
 
 var config Config
@@ -75,21 +81,23 @@ func main() {
 	router := gin.Default()
 
 	authorized := router.Group("/", gin.BasicAuth(gin.Accounts{
-		config.UserName: config.Password,
+		config.UserName:  config.Password,
+		config.UserName1: config.Password1,
+		config.UserName2: config.Password2,
+		config.UserName3: config.Password3,
 	}))
 
-	authorized2 := router.Group("/", someBasicAuth())
-
-	router.POST("/pokemons", postPokemons)
-	router.GET("/pokemons", someBasicAuth2, getPokemons)
-	authorized2.GET("/pokemons/:id", getPokemonByID)
-	router.PUT("/pokemons/:id", updatePokemonByID)
+	authorized.POST("/pokemons", postPokemons)
+	router.GET("/pokemons", getPokemons)
+	router.GET("/pokemons/:id", getPokemonByID)
+	authorized.PUT("/pokemons/:id", updatePokemonByID)
 	authorized.DELETE("/pokemons/:id", deletePokemonByID)
+	router.DELETE("/pokemons", adminBasicAuth, deleteAllPokemons)
 
 	router.Run(config.URL)
 }
 
-func someBasicAuth2(c *gin.Context) {
+func adminBasicAuth(c *gin.Context) {
 	auth := strings.SplitN(c.Request.Header.Get("Authorization"), " ", 2)
 
 	if len(auth) != 2 || auth[0] != "Basic" {
@@ -101,32 +109,11 @@ func someBasicAuth2(c *gin.Context) {
 	pair := strings.SplitN(string(payload), ":", 2)
 
 	if len(pair) != 2 || !authenticateUser(pair[0], pair[1]) {
-		respondWithError(401, "Unauthorized", c)
+		respondWithError(401, "You have not rights", c)
 		return
 	}
 
 	c.Next()
-}
-
-func someBasicAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		auth := strings.SplitN(c.Request.Header.Get("Authorization"), " ", 2)
-
-		if len(auth) != 2 || auth[0] != "Basic" {
-			respondWithError(401, "Unauthorized", c)
-			return
-		}
-
-		payload, _ := base64.StdEncoding.DecodeString(auth[1])
-		pair := strings.SplitN(string(payload), ":", 2)
-
-		if len(auth) != 2 || !authenticateUser(pair[0], pair[1]) {
-			respondWithError(401, "Unauthorized", c)
-			return
-		}
-
-		c.Next()
-	}
 }
 
 func authenticateUser(user, password string) bool {
@@ -283,5 +270,26 @@ func deletePokemonByID(c *gin.Context) {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "pokemon not found"})
 	} else {
 		c.IndentedJSON(http.StatusOK, gin.H{"message": "pokemon was deleted"})
+	}
+}
+
+func deleteAllPokemons(c *gin.Context) {
+	collection, cancel, err := connectToMongoDB()
+	defer cancel()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	res, err := collection.DeleteMany(context.Background(), bson.D{})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	// pokemons = make(map[int]pokemon)
+	if res.DeletedCount == 0 {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "pokemons not found"})
+	} else {
+		c.IndentedJSON(http.StatusOK, gin.H{"message": "all pokemons was deleted"})
 	}
 }
