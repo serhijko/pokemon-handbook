@@ -1,0 +1,125 @@
+basePath: /api/v1
+definitions:
+  main.pokemon:
+    properties:
+      color:
+        type: string
+      id:
+        type: string
+      is_legendary:
+        type: boolean
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /pokemons:
+    delete:
+      description: Delete all existing pokemons in the MongoDB and gives a message
+        "all pokemons are deleted". Pass values in json format. If there aren't pokemons
+        in the database gives a message "pokemons not found".
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: all pokemons was deleted
+          schema:
+            $ref: '#/definitions/main.pokemon'
+        "404":
+          description: pokemons not found
+          schema:
+            type: string
+      summary: Delete all pokemons in the MongoDB
+    get:
+      description: Get all pokemons from the MongoDB. Pass values in json format.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.pokemon'
+            type: array
+        "404":
+          description: 'Error: Not Found'
+          schema:
+            type: string
+      summary: Retrieves all pokemons from the MongoDB
+    post:
+      description: Post a pokemon to the MongoDB. If the database doesn't exist, create
+        and insert a new value. Pass values in json format.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.pokemon'
+        "400":
+          description: object can't be parsed into JSON
+          schema:
+            type: string
+      summary: Post pokemon to the MongoDB
+  /pokemons/{id}:
+    delete:
+      description: Delete an existing pokemon in the MongoDB by ID and gives a message.
+        Pass values in json format. If there isn't pokemon with the ID gives a message.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: pokemon was deleted
+          schema:
+            $ref: '#/definitions/main.pokemon'
+        "201":
+          description: pokemon not found
+          schema:
+            type: string
+      summary: Delete pokemon in the MongoDB based on given ID
+    get:
+      description: Get a pokemon from the MongoDB by ID. Pass values in json format.
+        If there aren't any pokemon with the ID gives a message "pokemon not found".
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.pokemon'
+        "404":
+          description: pokemon not found
+          schema:
+            type: string
+      summary: Retrieve pokemon from the MongoDB based on given ID
+    put:
+      description: Update an existing pokemon in the MongoDB by ID. Pass values in
+        json format. If there isn't pokemon with the ID creates a new pokemon.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.pokemon'
+        "201":
+          description: Created
+          schema:
+            type: string
+      summary: Update pokemon's data in the MongoDB based on given ID
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
