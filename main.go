@@ -178,7 +178,12 @@ func postPokemon(c *gin.Context) {
 		return
 	}
 
-	res, err := collection.InsertOne(context.Background(), newPokemon)
+	res, err := collection.InsertOne(context.Background(), bson.D{
+		{Key: "_id", Value: newPokemon.ID},
+		{Key: "name", Value: newPokemon.Name},
+		{Key: "is_legendary", Value: newPokemon.IsLegendary},
+		{Key: "color", Value: newPokemon.Color},
+	})
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -254,7 +259,7 @@ func getPokemonByID(c *gin.Context) {
 	}
 
 	result := pokemon{}
-	err = collection.FindOne(context.Background(), bson.D{{Key: "id", Value: id}}).Decode(&result)
+	err = collection.FindOne(context.Background(), bson.D{{Key: "_id", Value: id}}).Decode(&result)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "pokemon not found"})
 		// log.Fatal(err)
@@ -272,6 +277,7 @@ func getPokemonByID(c *gin.Context) {
 // @failure      201      {string}  string        ""
 // @router       /pokemons/{id} [put]
 func updatePokemonByID(c *gin.Context) {
+	id := c.Param("id")
 	var newPokemon pokemon
 
 	if err := c.BindJSON(&newPokemon); err != nil {
@@ -287,8 +293,13 @@ func updatePokemonByID(c *gin.Context) {
 	}
 
 	opts := options.FindOneAndUpdate().SetUpsert(true)
-	filter := bson.D{{Key: "id", Value: newPokemon.ID}}
-	update := bson.D{{Key: "$set", Value: newPokemon}}
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "_id", Value: newPokemon.ID},
+		{Key: "name", Value: newPokemon.Name},
+		{Key: "is_legendary", Value: newPokemon.IsLegendary},
+		{Key: "color", Value: newPokemon.Color},
+	}}}
 	var updatedPokemon bson.M
 	err = collection.FindOneAndUpdate(
 		context.Background(),
@@ -326,7 +337,7 @@ func deletePokemonByID(c *gin.Context) {
 		return
 	}
 
-	res, err := collection.DeleteOne(context.Background(), bson.D{{Key: "id", Value: id}})
+	res, err := collection.DeleteOne(context.Background(), bson.D{{Key: "_id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 		return
