@@ -17,15 +17,12 @@ type Config struct {
 	DatabaseURL    string
 	DatabaseName   string
 	CollectionName string
+	UserCollecName string
 	URL            string
 	UserName       string
 	Password       string
 	UserName1      string
 	Password1      string
-	UserName2      string
-	Password2      string
-	UserName3      string
-	Password3      string
 }
 
 var Conf Config
@@ -43,7 +40,7 @@ func ReadConfig() Config {
 	return Conf
 }
 
-func ConnectToMongoDB() (*mongo.Collection, context.CancelFunc, error) {
+func ConnectToMongoDB(collectionName string) (*mongo.Collection, context.CancelFunc, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(Conf.DatabaseURL))
@@ -51,7 +48,7 @@ func ConnectToMongoDB() (*mongo.Collection, context.CancelFunc, error) {
 	if err == nil {
 		fmt.Printf("Client value %v\n", client)
 
-		collection = client.Database(Conf.DatabaseName).Collection(Conf.CollectionName)
+		collection = client.Database(Conf.DatabaseName).Collection(collectionName)
 		fmt.Printf("Collection value %v\n", collection)
 	}
 

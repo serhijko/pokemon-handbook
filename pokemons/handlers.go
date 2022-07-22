@@ -37,7 +37,7 @@ func PostPokemon(c *gin.Context) {
 		return
 	}
 
-	collection, cancel, err := config.ConnectToMongoDB()
+	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
 	if err != nil {
 		fmt.Println(err)
@@ -73,7 +73,7 @@ func PostPokemon(c *gin.Context) {
 func GetPokemons(c *gin.Context) {
 	var pokemons = []pokemon{}
 
-	collection, cancel, err := config.ConnectToMongoDB()
+	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
 	if err != nil {
 		fmt.Println(err)
@@ -117,7 +117,7 @@ func GetPokemons(c *gin.Context) {
 func GetPokemonByID(c *gin.Context) {
 	id := c.Param("id")
 
-	collection, cancel, err := config.ConnectToMongoDB()
+	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
 	if err != nil {
 		fmt.Println(err)
@@ -151,7 +151,7 @@ func UpdatePokemonByID(c *gin.Context) {
 		return
 	}
 
-	collection, cancel, err := config.ConnectToMongoDB()
+	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
 	if err != nil {
 		fmt.Println(err)
@@ -196,7 +196,7 @@ func UpdatePokemonByID(c *gin.Context) {
 func DeletePokemonByID(c *gin.Context) {
 	id := c.Param("id")
 
-	collection, cancel, err := config.ConnectToMongoDB()
+	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
 	if err != nil {
 		fmt.Println(err)
@@ -225,7 +225,7 @@ func DeletePokemonByID(c *gin.Context) {
 // @failure      404      {string}  string        "pokemons not found"
 // @router       /pokemons [delete]
 func DeleteAllPokemons(c *gin.Context) {
-	collection, cancel, err := config.ConnectToMongoDB()
+	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
 	if err != nil {
 		fmt.Println(err)
