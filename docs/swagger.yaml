@@ -1,14 +1,23 @@
 basePath: /api/v1
 definitions:
-  main.pokemon:
+  pokemons.pokemon:
     properties:
       color:
         type: string
       id:
-        type: string
+        type: integer
       is_legendary:
         type: boolean
       name:
+        type: string
+    type: object
+  users.user:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+      role:
         type: string
     type: object
 host: localhost:8080
@@ -36,7 +45,7 @@ paths:
         "200":
           description: all pokemons was deleted
           schema:
-            $ref: '#/definitions/main.pokemon'
+            $ref: '#/definitions/pokemons.pokemon'
         "404":
           description: pokemons not found
           schema:
@@ -51,8 +60,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/main.pokemon'
+              $ref: '#/definitions/pokemons.pokemon'
             type: array
+        "400":
+          description: object can't be parsed into JSON
+          schema:
+            type: string
         "404":
           description: 'Error: Not Found'
           schema:
@@ -67,7 +80,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/main.pokemon'
+            $ref: '#/definitions/pokemons.pokemon'
         "400":
           description: object can't be parsed into JSON
           schema:
@@ -83,7 +96,7 @@ paths:
         "200":
           description: pokemon was deleted
           schema:
-            $ref: '#/definitions/main.pokemon'
+            $ref: '#/definitions/pokemons.pokemon'
         "201":
           description: pokemon not found
           schema:
@@ -98,7 +111,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.pokemon'
+            $ref: '#/definitions/pokemons.pokemon'
         "404":
           description: pokemon not found
           schema:
@@ -113,12 +126,95 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.pokemon'
+            $ref: '#/definitions/pokemons.pokemon'
         "201":
           description: Created
           schema:
             type: string
       summary: Update pokemon's data in the MongoDB based on given ID
+  /users:
+    get:
+      description: Get all users from the MongoDB. Pass values in json format.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/users.user'
+            type: array
+        "400":
+          description: object can't be parsed into JSON
+          schema:
+            type: string
+        "404":
+          description: 'Error: Not Found'
+          schema:
+            type: string
+      summary: Retrieves all users from the MongoDB
+    post:
+      description: Post a user to the MongoDB. If the database doesn't exist, create
+        and insert a new value. Pass values in json format.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/users.user'
+        "400":
+          description: object can't be parsed into JSON
+          schema:
+            type: string
+      summary: Post user to the MongoDB
+  /users/{id}:
+    delete:
+      description: Delete an existing user in the MongoDB by login and gives a message.
+        Pass values in json format. If there isn't user with the login gives a message.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user was deleted
+          schema:
+            $ref: '#/definitions/users.user'
+        "201":
+          description: user not found
+          schema:
+            type: string
+      summary: Delete user in the MongoDB based on given login
+    get:
+      description: Get a user from the MongoDB by given login. Pass values in json
+        format. If there aren't any users with the login gives a message "user not
+        found".
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.user'
+        "404":
+          description: user not found
+          schema:
+            type: string
+      summary: Retrieve user from the MongoDB based on given Login
+    put:
+      description: Update an existing user in the MongoDB by ID. Pass values in json
+        format. If there isn't user with the ID creates a new user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.user'
+        "201":
+          description: Created
+          schema:
+            type: string
+      summary: Update user's data in the MongoDB based on given ID
 securityDefinitions:
   BasicAuth:
     type: basic

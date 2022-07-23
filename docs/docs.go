@@ -38,8 +38,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.pokemon"
+                                "$ref": "#/definitions/pokemons.pokemon"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "object can't be parsed into JSON",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "404": {
@@ -60,7 +66,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.pokemon"
+                            "$ref": "#/definitions/pokemons.pokemon"
                         }
                     },
                     "400": {
@@ -81,7 +87,7 @@ const docTemplate = `{
                     "200": {
                         "description": "all pokemons was deleted",
                         "schema": {
-                            "$ref": "#/definitions/main.pokemon"
+                            "$ref": "#/definitions/pokemons.pokemon"
                         }
                     },
                     "404": {
@@ -104,7 +110,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.pokemon"
+                            "$ref": "#/definitions/pokemons.pokemon"
                         }
                     },
                     "404": {
@@ -125,7 +131,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.pokemon"
+                            "$ref": "#/definitions/pokemons.pokemon"
                         }
                     },
                     "201": {
@@ -146,7 +152,7 @@ const docTemplate = `{
                     "200": {
                         "description": "pokemon was deleted",
                         "schema": {
-                            "$ref": "#/definitions/main.pokemon"
+                            "$ref": "#/definitions/pokemons.pokemon"
                         }
                     },
                     "201": {
@@ -157,22 +163,154 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users": {
+            "get": {
+                "description": "Get all users from the MongoDB. Pass values in json format.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieves all users from the MongoDB",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/users.user"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "object can't be parsed into JSON",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Post a user to the MongoDB. If the database doesn't exist, create and insert a new value. Pass values in json format.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Post user to the MongoDB",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/users.user"
+                        }
+                    },
+                    "400": {
+                        "description": "object can't be parsed into JSON",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "description": "Get a user from the MongoDB by given login. Pass values in json format. If there aren't any users with the login gives a message \"user not found\".",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve user from the MongoDB based on given Login",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/users.user"
+                        }
+                    },
+                    "404": {
+                        "description": "user not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing user in the MongoDB by ID. Pass values in json format. If there isn't user with the ID creates a new user.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update user's data in the MongoDB based on given ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/users.user"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an existing user in the MongoDB by login and gives a message. Pass values in json format. If there isn't user with the login gives a message.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete user in the MongoDB based on given login",
+                "responses": {
+                    "200": {
+                        "description": "user was deleted",
+                        "schema": {
+                            "$ref": "#/definitions/users.user"
+                        }
+                    },
+                    "201": {
+                        "description": "user not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "main.pokemon": {
+        "pokemons.pokemon": {
             "type": "object",
             "properties": {
                 "color": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "is_legendary": {
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.user": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 }
             }
