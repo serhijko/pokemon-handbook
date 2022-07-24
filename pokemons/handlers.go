@@ -29,6 +29,7 @@ type pokemon struct {
 // @produce      json
 // @success      201 {object} pokemon
 // @failure      400 {string} string "object can't be parsed into JSON"
+// @failure      409 {string} string "a pokemon with such id already exists"
 // @router       /pokemons [post]
 func PostPokemon(c *gin.Context) {
 	var newPokemon pokemon
@@ -47,6 +48,9 @@ func PostPokemon(c *gin.Context) {
 
 	res, err := collection.InsertOne(context.Background(), newPokemon)
 	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			c.IndentedJSON(http.StatusConflict, gin.H{"message": "a pokemon with such id already exists"})
+		}
 		fmt.Println(err)
 		return
 	}

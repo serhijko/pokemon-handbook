@@ -74,6 +74,12 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "409": {
+                        "description": "a pokemon with such id already exists",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             },

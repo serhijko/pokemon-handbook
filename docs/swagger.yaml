@@ -85,6 +85,10 @@ paths:
           description: object can't be parsed into JSON
           schema:
             type: string
+        "409":
+          description: a pokemon with such id already exists
+          schema:
+            type: string
       summary: Post pokemon to the MongoDB
   /pokemons/{id}:
     delete:
