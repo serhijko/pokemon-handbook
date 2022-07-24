@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -108,10 +109,15 @@ func GetPokemons(c *gin.Context) {
 // @description  Get a pokemon from the MongoDB by ID. Pass values in json format. If there aren't any pokemon with the ID gives a message "pokemon not found".
 // @produce      json
 // @success      200 {object} pokemon
+// @failure      404 {string} string "must be a number"
 // @failure      404 {string} string "pokemon not found"
 // @router       /pokemons/{id} [get]
 func GetPokemonByID(c *gin.Context) {
-	id := c.Param("id")
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "must be a number"})
+		return
+	}
 
 	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
