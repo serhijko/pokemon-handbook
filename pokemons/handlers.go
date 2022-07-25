@@ -113,13 +113,13 @@ func GetPokemons(c *gin.Context) {
 // @description  Get a pokemon from the MongoDB by ID. Pass values in json format. If there aren't any pokemon with the ID gives a message "pokemon not found".
 // @produce      json
 // @success      200 {object} pokemon
-// @failure      404 {string} string "must be a number"
+// @failure      406 {string} string "must be a number"
 // @failure      404 {string} string "pokemon not found"
 // @router       /pokemons/{id} [get]
 func GetPokemonByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "must be a number"})
+		c.IndentedJSON(http.StatusNotAcceptable, gin.H{"message": "must be a number"})
 		return
 	}
 
@@ -145,15 +145,27 @@ func GetPokemonByID(c *gin.Context) {
 // @summary      Update pokemon's data in the MongoDB based on given ID
 // @description  Update an existing pokemon in the MongoDB by ID. Pass values in json format. If there isn't pokemon with the ID creates a new pokemon.
 // @produce      json
-// @success      200 {object} pokemon
-// @failure      201 {string} string ""
+// @success      200 {string} string "pokemon was updated"
+// @success      201 {object} pokemon
+// @failure      406 {string} string "must be a number"
+// @failure      400 {string} string "object can't be parsed into JSON"
+// @failure      406 {string} string "pokemon's id cannot be changed"
 // @router       /pokemons/{id} [put]
 func UpdatePokemonByID(c *gin.Context) {
-	id := c.Param("id")
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotAcceptable, gin.H{"message": "must be a number"})
+		return
+	}
 	var newPokemon pokemon
 
 	if err := c.BindJSON(&newPokemon); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "object can't be parsed into JSON"})
+		return
+	}
+
+	if newPokemon.ID != id {
+		c.IndentedJSON(http.StatusNotAcceptable, gin.H{"message": "pokemon's id cannot be changed"})
 		return
 	}
 
@@ -164,26 +176,24 @@ func UpdatePokemonByID(c *gin.Context) {
 		return
 	}
 
-	opts := options.FindOneAndUpdate().SetUpsert(true)
+	opts := options.Update().SetUpsert(true)
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.D{{Key: "$set", Value: newPokemon}}
-	var updatedPokemon bson.M
-	err = collection.FindOneAndUpdate(
-		context.Background(),
-		filter,
-		update,
-		opts,
-	).Decode(&updatedPokemon)
+
+	result, err := collection.UpdateOne(context.Background(), filter, update, opts)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			// pokemons = append(pokemons, newPokemon)
-			fmt.Printf("id value %v\n", newPokemon.ID)
-			c.IndentedJSON(http.StatusCreated, newPokemon)
-			return
-		}
 		log.Fatal(err)
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "pokemon was updated"})
+
+	if result.MatchedCount != 0 {
+		c.IndentedJSON(http.StatusOK, gin.H{"message": "pokemon was updated"})
+		return
+	}
+	if result.UpsertedCount != 0 {
+		// pokemons = append(pokemons, newPokemon)
+		fmt.Printf("inserted a new pokemon with ID %v\n", result.UpsertedID)
+		c.IndentedJSON(http.StatusCreated, newPokemon)
+	}
 }
 
 // DeletePokemonByID godoc

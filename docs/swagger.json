@@ -117,6 +117,12 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "406": {
+                        "description": "must be a number",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -128,13 +134,25 @@
                 "summary": "Update pokemon's data in the MongoDB based on given ID",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "pokemon was updated",
                         "schema": {
-                            "$ref": "#/definitions/pokemons.pokemon"
+                            "type": "string"
                         }
                     },
                     "201": {
                         "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/pokemons.pokemon"
+                        }
+                    },
+                    "400": {
+                        "description": "object can't be parsed into JSON",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "406": {
+                        "description": "pokemon's id cannot be changed",
                         "schema": {
                             "type": "string"
                         }
