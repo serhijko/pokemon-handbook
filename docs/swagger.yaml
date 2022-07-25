@@ -105,6 +105,10 @@ paths:
           description: pokemon not found
           schema:
             type: string
+        "406":
+          description: must be a number
+          schema:
+            type: string
       summary: Delete pokemon in the MongoDB based on given ID
     get:
       description: Get a pokemon from the MongoDB by ID. Pass values in json format.

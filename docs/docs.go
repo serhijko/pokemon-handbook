@@ -184,6 +184,12 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "406": {
+                        "description": "must be a number",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }

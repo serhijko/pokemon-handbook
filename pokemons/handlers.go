@@ -202,10 +202,15 @@ func UpdatePokemonByID(c *gin.Context) {
 // @description  Delete an existing pokemon in the MongoDB by ID and gives a message. Pass values in json format. If there isn't pokemon with the ID gives a message.
 // @produce      json
 // @success      200 {object} pokemon "pokemon was deleted"
+// @failure      406 {string} string "must be a number"
 // @failure      201 {string} string "pokemon not found"
 // @router       /pokemons/{id} [delete]
 func DeletePokemonByID(c *gin.Context) {
-	id := c.Param("id")
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotAcceptable, gin.H{"message": "must be a number"})
+		return
+	}
 
 	collection, cancel, err := config.ConnectToMongoDB(config.Conf.CollectionName)
 	defer cancel()
